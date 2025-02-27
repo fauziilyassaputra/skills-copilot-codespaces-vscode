@@ -1,60 +1,29 @@
-// Create web server
-var express = require('express');
-var app = express();
-var bodyParser = require('body-parser');
-var fs = require('fs');
-var path = require('path');
+// Create web server with Express.js
+const express = require('express');
+const app = express();
+const port = 3000;
 
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
+// Read data from file
+const fs = require('fs');
+const data = fs.readFileSync('data.json', 'utf8');
+const comments = JSON.parse(data);
 
 // Get all comments
-app.get('/comments', function(req, res) {
-    fs.readFile(__dirname + "/" + "comments.json", 'utf8', function(err, data) {
-        console.log(data);
-        res.end(data);
-    });
+app.get('/comments', (req, res) => {
+  res.json(comments);
 });
 
-// Add a new comment
-app.post('/comments', function(req, res) {
-    fs.readFile(__dirname + "/" + "comments.json", 'utf8', function(err, data) {
-        data = JSON.parse(data);
-        data['comments'].push(req.body);
-        fs.writeFile(__dirname + "/" + "comments.json", JSON.stringify(data), function(err) {
-            if (err) throw err;
-            res.end(JSON.stringify(data));
-        });
-    });
+// Get comment by id
+app.get('/comments/:id', (req, res) => {
+  const id = req.params.id;
+  const comment = comments.find(c => c.id === parseInt(id));
+  if (!comment) {
+    res.status(404).send('Comment not found');
+  } else {
+    res.json(comment);
+  }
 });
 
-// Delete a comment
-app.delete('/comments/:id', function(req, res) {
-    fs.readFile(__dirname + "/" + "comments.json", 'utf8', function(err, data) {
-        data = JSON.parse(data);
-        data['comments'].splice(req.params.id, 1);
-        fs.writeFile(__dirname + "/" + "comments.json", JSON.stringify(data), function(err) {
-            if (err) throw err;
-            res.end(JSON.stringify(data));
-        });
-    });
-});
-
-// Update a comment
-app.put('/comments/:id', function(req, res) {
-    fs.readFile(__dirname + "/" + "comments.json", 'utf8', function(err, data) {
-        data = JSON.parse(data);
-        data['comments'][req.params.id] = req.body;
-        fs.writeFile(__dirname + "/" + "comments.json", JSON.stringify(data), function(err) {
-            if (err) throw err;
-            res.end(JSON.stringify(data));
-        });
-    });
-});
-
-var server = app.listen(8081, function() {
-    var host = server.address().address;
-    var port = server.address().port;
-
-    console.log("Server listening at http://%s:%s", host, port);
+app.listen(port, () => {
+  console.log(`Server is running at http://localhost:${port}`);
 });

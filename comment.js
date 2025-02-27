@@ -1,29 +1,30 @@
-// Create web server with Express.js
-const express = require('express');
-const app = express();
-const port = 3000;
+// // Create web server
+// // Create web server
+var express = require('express');
+var app = express();
+var fs = require('fs');
+var bodyParser = require('body-parser');
 
-// Read data from file
-const fs = require('fs');
-const data = fs.readFileSync('data.json', 'utf8');
-const comments = JSON.parse(data);
+app.use(express.static('public'));
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
 
-// Get all comments
-app.get('/comments', (req, res) => {
-  res.json(comments);
+app.get('/comment', function(req, res) {
+  fs.readFile(__dirname + '/public/comment.json', 'utf8', function(err, data) {
+    res.end(data);
+  });
 });
 
-// Get comment by id
-app.get('/comments/:id', (req, res) => {
-  const id = req.params.id;
-  const comment = comments.find(c => c.id === parseInt(id));
-  if (!comment) {
-    res.status(404).send('Comment not found');
-  } else {
-    res.json(comment);
-  }
+app.post('/comment', function(req, res) {
+  fs.readFile(__dirname + '/public/comment.json', 'utf8', function(err, data) {
+    data = JSON.parse(data);
+    data.push(req.body);
+    fs.writeFile(__dirname + '/public/comment.json', JSON.stringify(data), 'utf8', function(err) {
+      res.end(JSON.stringify(data));
+    });
+  });
 });
 
-app.listen(port, () => {
-  console.log(`Server is running at http://localhost:${port}`);
+app.listen(8081, function() {
+  console.log('Server is running on port 8081');
 });
